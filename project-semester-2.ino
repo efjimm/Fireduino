@@ -1,3 +1,4 @@
+#include "arduino_secrets.h"
 #include <SPI.h>
 #include <WiFi101.h>
 #include <WiFiUdp.h>
@@ -7,8 +8,10 @@
 #include <stdint.h>
 #include <time.h>
 
+#include "thingProperties.h"
+
 static int serialPrintf(const char *fmt, ...);
-static time_t getTime();
+static time_t fetchTime();
 
 WiFiUDP udp;
 const uint16_t LOCAL_PORT = 2390;
@@ -24,11 +27,11 @@ setup(void) {
 	while (status != WL_CONNECTED) {
 		serialPrintf("Attempting to connect to ssid: '%s'\nlast status: %d\n", WIFI_SSID, status);
 
-#ifdef WIFI_PASS
-		status = WiFi.begin(WIFI_SSID, WIFI_PASS);
-#else
-		status = WiFi.begin(WIFI_SSID);
-#endif
+		if (sizeof(WIFI_PASS) > 0) {
+			status = WiFi.begin(WIFI_SSID, WIFI_PASS);
+		} else {
+			status = WiFi.begin(WIFI_SSID);
+		}
 
 		delay(2000);
 	}
@@ -37,15 +40,24 @@ setup(void) {
 
 	udp.begin(LOCAL_PORT);
 
-	setSyncProvider(getTime);
+	setSyncProvider(fetchTime);
 	setSyncInterval(3600); // Resync every hour
+	
+	
+  // Defined in thingProperties.h
+  initProperties();
+
+  // Connect to Arduino IoT Cloud
+  ArduinoCloud.begin(ArduinoIoTPreferredConnection);
 }
 
 void
 loop(void) {
+  ArduinoCloud.update();
 	static char buf[64];
 	const time_t temp = now();
 	const auto time = ctime(&temp);
+	date = time;
 	serialPrintf("%s", time);
 
 	delay(1000);
@@ -69,7 +81,7 @@ pingTimeServer(IPAddress ip) {
 }
 
 time_t
-getTime() {
+fetchTime() {
 	IPAddress ip;
 	WiFi.hostByName(NTP_SERVER, ip);
 	pingTimeServer(ip);
