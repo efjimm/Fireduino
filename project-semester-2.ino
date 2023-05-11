@@ -1,6 +1,5 @@
 #include "arduino_secrets.h"
 #include <SPI.h>
-#include <WiFi101.h>
 #include <WiFiUdp.h>
 #include <TimeLib.h>
 
@@ -26,28 +25,27 @@ void
 setup(void) {
 	Serial.begin(9600);
 	pinMode(thermistor_pin, INPUT);
+	
+	// Arduino Cloud
+	initProperties();
+	ArduinoCloud.begin(ArduinoIoTPreferredConnection);
 
-	int status = WL_IDLE_STATUS;
-	while (status != WL_CONNECTED) {
-		serialPrintf("Attempting to connect to ssid: '%s'\nlast status: %d\n", WIFI_SSID, status);
+	Serial.println("Connecting to the Arduino cloud...");
+	while (!ArduinoCloud.connected()) {
+		ArduinoCloud.update();
+		delay(1000);
+	}
 
-		if (sizeof(WIFI_PASS) > 0) {
-			status = WiFi.begin(WIFI_SSID, WIFI_PASS);
-		} else {
-			status = WiFi.begin(WIFI_SSID);
-		}
-
-		delay(2000);
+	const uint32_t begin = millis();
+	while (millis() - begin < 10000) {
+		ArduinoCloud.update();
+		delay(1000);
 	}
 
 	udp.begin(LOCAL_PORT);
 
 	setSyncProvider(fetchTime);
 	setSyncInterval(3600); // Resync every hour
-	
-	// Arduino Cloud
-	initProperties();
-	ArduinoCloud.begin(ArduinoIoTPreferredConnection);
 
 	tone(buzzer_pin, 512, 500);
 }
@@ -64,9 +62,9 @@ loop(void) {
 	temperature = (voltage - 0.55) * 100;
 
 	if (temperature >= buzzer_temp_high) {
-		tone(buzzer_pin, 4096, 250);
+		tone(buzzer_pin, buzzer_temp_high_pitch, 250);
 	} else if (temperature <= buzzer_temp_low) {
-		tone(buzzer_pin, 512, 250);
+		tone(buzzer_pin, buzzer_temp_low_pitch, 250);
 	}
 
 	Serial.print(temperature);
