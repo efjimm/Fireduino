@@ -17,24 +17,24 @@
 static int serialPrintf(const char *fmt, ...);
 static time_t fetchTime(void);
 
-hd44780_pinIO lcd(12, 11, 2, 3, 4, 5);
-WiFiUDP udp;
-const uint16_t LOCAL_PORT = 2390;
-
+static hd44780_pinIO lcd(12, 11, 2, 3, 4, 5);
+static WiFiUDP udp;
 static char msg[48] = {0};
-const auto buzzer_pin = 6;
-const int thermistor_pin = A1;
-
-uint8_t degree_symbol[8] = {
+static uint8_t degree_symbol[8] = {
 	0b00100,
 	0b01010,
 	0b00100,
 };
 
+#define LOCAL_PORT 2390
+#define BUZZER_PIN 6
+#define THERMISTOR_PIN A1
+#define UTC_OFFSET +1
+
 void
 setup(void) {
 	Serial.begin(9600);
-	pinMode(thermistor_pin, INPUT);
+	pinMode(THERMISTOR_PIN, INPUT);
 	
 	// Arduino Cloud
 	initProperties();
@@ -63,7 +63,7 @@ setup(void) {
 	setSyncProvider(fetchTime);
 	setSyncInterval(3600); // Resync every hour
 
-	tone(buzzer_pin, 512, 500);
+	tone(BUZZER_PIN, 512, 500);
 }
 
 void
@@ -74,13 +74,13 @@ loop(void) {
 	const auto temp = now();
 	strftime(buf, sizeof(buf), "%F %H:%M:%S", gmtime(&temp));
 
-	const float voltage = analogRead(thermistor_pin) * 3.3 / 1024;
+	const float voltage = analogRead(THERMISTOR_PIN) * 3.3 / 1024;
 	temperature = (voltage - 0.55) * 100;
 
 	if (temperature >= buzzer_temp_high) {
-		tone(buzzer_pin, buzzer_temp_high_pitch, 250);
+		tone(BUZZER_PIN, buzzer_temp_high_pitch, 250);
 	} else if (temperature <= buzzer_temp_low) {
-		tone(buzzer_pin, buzzer_temp_low_pitch, 250);
+		tone(BUZZER_PIN, buzzer_temp_low_pitch, 250);
 	}
 
 	lcd.clear();
@@ -92,8 +92,7 @@ loop(void) {
 	lcd.setCursor(0, 1);
 	lcd.print(buf);
 
-	Serial.print(temperature);
-	serialPrintf(" : %s\n", buf);
+	serialPrintf("%f : %s\n", (float)temperature, buf);
 
 	ArduinoCloud.update();
 	delay(1000);
@@ -139,7 +138,7 @@ fetchTime(void) {
 
 		// NTP returns the number of seconds since January 1 1900. The C99 time functions work with
 		// seconds since the unix epoch (January 1 1970).
-		return seconds - SEVENTY_YEARS;
+		return seconds - SEVENTY_YEARS + UTC_OFFSET * 3600;
 	}
 
 	return 0;
