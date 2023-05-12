@@ -2,6 +2,9 @@
 #include <SPI.h>
 #include <WiFiUdp.h>
 #include <TimeLib.h>
+#include <ArduinoIoTCloud.h>
+#include <hd44780.h>
+#include <hd44780ioClass/hd44780_pinIO.h>
 
 #include <stdarg.h>
 #include <stdint.h>
@@ -14,12 +17,19 @@
 static int serialPrintf(const char *fmt, ...);
 static time_t fetchTime(void);
 
+hd44780_pinIO lcd(12, 11, 2, 3, 4, 5);
 WiFiUDP udp;
 const uint16_t LOCAL_PORT = 2390;
 
 static char msg[48] = {0};
 const auto buzzer_pin = 6;
 const int thermistor_pin = A1;
+
+uint8_t degree_symbol[8] = {
+	0b00100,
+	0b01010,
+	0b00100,
+};
 
 void
 setup(void) {
@@ -31,10 +41,16 @@ setup(void) {
 	ArduinoCloud.begin(ArduinoIoTPreferredConnection);
 
 	Serial.println("Connecting to the Arduino cloud...");
+
 	while (!ArduinoCloud.connected()) {
 		ArduinoCloud.update();
 		delay(1000);
 	}
+
+	analogWrite(A3, 50);
+	lcd.begin(16, 2);
+	lcd.createChar(0, degree_symbol);
+	lcd.print("Connecting...");
 
 	const uint32_t begin = millis();
 	while (millis() - begin < 10000) {
@@ -67,9 +83,19 @@ loop(void) {
 		tone(buzzer_pin, buzzer_temp_low_pitch, 250);
 	}
 
+	lcd.clear();
+	lcd.setCursor(0, 0);
+	lcd.print(temperature);
+	lcd.write((uint8_t)0);
+	lcd.print("C");
+
+	lcd.setCursor(0, 1);
+	lcd.print(buf);
+
 	Serial.print(temperature);
 	serialPrintf(" : %s\n", buf);
 
+	ArduinoCloud.update();
 	delay(1000);
 }
 
