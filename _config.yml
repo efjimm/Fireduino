@@ -3,6 +3,6 @@ email: ebonner@airmail.cc
 description: Cloud-based temperature reporting using Arduino
 theme: jekyll-theme-cayman
 
-baseurl: ""
-url: ""
+baseurl: /Fireduino
+url: http://efjimm.github.io
 github_username: efjimm
