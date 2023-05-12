@@ -5,7 +5,16 @@ title: Setup
 
 # Setup
 
-### Circuit
+## Requirements
+
+- Arduino IDE
+- Arduino MKR1000
+- TMP36 Temperature Sensor
+- HD44780 LCD Display
+- Piezo buzzer
+- 220 Ω resistor
+
+## Circuit
 
 Set up the circuit like so:
 
@@ -13,7 +22,7 @@ Set up the circuit like so:
 
 There are many connections here - verify that they are correct before proceeding.
 
-### Arduino Cloud
+## Arduino Cloud
 
 Set up your Arduino to use the Arduino Cloud. To do so, sign in to
 [Arduino Cloud](https://cloud.arduino.cc). Go to "IoT Cloud", and under the "devices" tab, add a
@@ -32,7 +41,7 @@ Arduino Cloud, so you must set the variables manually. Create 5 variables:
 
 You can view and manipulate these variables in a dashboard.
 
-### Uploading the Sketch
+## Uploading the Sketch
 
 Note that this must be done *after* you have set up your device for Arduino Cloud.
 

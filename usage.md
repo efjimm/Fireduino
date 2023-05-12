@@ -15,12 +15,16 @@ dependent on the temperature sensor used. The date is displayed in the format YY
 timezone used for the date is defined at compile time, in the UTC_OFFSET macro in the fireduino.ino
 file. Redefine this to be suitable for your current timezone.
 
+![LCD Display](board.jpg)
+
 ## Cloud Integration
 
 The device reports temperature readings to the Arduino Cloud at 5 second intervals. The temperature
 data is stored as a floating point number, which the Arduino cloud truncates to 2 decimal places.
 To view a graph of temperature over time, the Arduino Cloud has a builtin chart display in the
 Dashboard section, which you can use to display the temperature readings over time.
+
+![Arduino Cloud dashboard](dashboard.png)
 
 There are 4 variables (reaching the limit of what is allowed with a free Arduino Cloud account)
 that control the behaviour of the piezo buzzer in response to the temperature readings.
@@ -29,6 +33,8 @@ and "high temperature" piezo buzzer warnings. If the high temperature threshold 
 low temperature threshold, the high temperature warning takes priority. The variables
 *buzzer_temp_low_pitch* and *buzzer_temp_high_pitch* control the frequency of the piezo buzzer for
 their respective temperature warnings. Note that values lower than 32hz are unlikely to work.
+
+![Arduino Cloud control panel](cloud.png)
 
 ## Serial Monitor
 
